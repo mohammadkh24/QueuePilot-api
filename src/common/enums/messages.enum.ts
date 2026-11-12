@@ -15,3 +15,10 @@ export enum AuthMessages {
   REFRESH_TOKEN_INVALID = 'توکن تمدید اعتبار نامعتبر یا منقضی شده است.',
   LOGOUT_SUCCESS = 'با موفقیت از حساب کاربری خارج شدید.',
 }
+
+export enum BusinessMessages {
+  BUSINESS_CREATED = 'کسب‌وکار با موفقیت ایجاد شد.',
+  BUSINESS_UPDATED = 'اطلاعات کسب‌وکار با موفقیت بروزرسانی شد.',
+  BUSINESS_DELETED = 'کسب‌وکار با موفقیت حذف شد.',
+  BUSINESS_NOT_FOUND = 'کسب‌وکار موردنظر پیدا نشد.',
+}
