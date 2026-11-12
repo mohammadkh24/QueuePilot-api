@@ -22,3 +22,14 @@ export enum BusinessMessages {
   BUSINESS_DELETED = 'کسب‌وکار با موفقیت حذف شد.',
   BUSINESS_NOT_FOUND = 'کسب‌وکار موردنظر پیدا نشد.',
 }
+
+
+
+export enum ServiceMessages {
+    SERVICE_CREATED = 'خدمت با موفقیت ایجاد شد.',
+    SERVICE_UPDATED = 'اطلاعات خدمت با موفقیت بروزرسانی شد.',
+    SERVICE_DELETED = 'خدمت با موفقیت حذف شد.',
+    SERVICE_NOT_FOUND = 'خدمت موردنظر پیدا نشد.',
+  }
+  
+  
