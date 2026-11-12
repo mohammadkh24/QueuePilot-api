@@ -24,6 +24,13 @@ export class User {
   @Column({ select: false })
   password: string;
 
+  @Column({
+    type: 'text',
+    nullable: true,
+    select: false,
+  })
+  refreshTokenHash: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

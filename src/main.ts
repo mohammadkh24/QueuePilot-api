@@ -36,15 +36,16 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalInterceptors(new TransformInterceptor())
-  app.useGlobalFilters(new AllExceptionsFilter())
+  app.useGlobalInterceptors(new TransformInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('QueuePilot')
-    .setDescription('.........')
+    .setDescription('Queuing system')
     .addBearerAuth()
     .setVersion('1.0.0')
-
+    .addTag('Auth')
+    .addTag('Users')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
