@@ -2,5 +2,6 @@ export enum entityName {
     User = "users",
     Business = "businesses",
     Service = "services",
-    Appointment = 'appointments'
+    Appointment = 'appointments',
+    Queue = "queues"
 }

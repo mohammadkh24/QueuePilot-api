@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
 import { ServiceModule } from './modules/service/service.module';
 import { AppointmentModule } from './modules/appointment/appointment.module';
+import { QueueModule } from './modules/queue/queue.module';
 
 @Module({
   imports: [
@@ -31,6 +32,8 @@ import { AppointmentModule } from './modules/appointment/appointment.module';
     ServiceModule,
 
     AppointmentModule,
+
+    QueueModule,
   ],
 
   

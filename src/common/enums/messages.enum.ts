@@ -42,3 +42,17 @@ export enum AppointmentMessages {
   SERVICE_INACTIVE = 'این خدمت در حال حاضر غیرفعال است.',
   INVALID_APPOINTMENT_TIME = 'زمان پایان نوبت باید بعد از زمان شروع باشد.',
 }
+
+export enum QueueMessages {
+  QUEUE_CREATED = 'مراجعه‌کننده با موفقیت وارد صف شد.',
+  QUEUE_UPDATED = 'وضعیت صف با موفقیت بروزرسانی شد.',
+  QUEUE_CANCELLED = 'ورودی صف با موفقیت لغو شد.',
+  QUEUE_NOT_FOUND = 'ورودی صف موردنظر پیدا نشد.',
+  QUEUE_ALREADY_EXISTS = 'این مراجعه‌کننده قبلاً وارد صف شده است.',
+  QUEUE_INVALID_STATUS = 'تغییر وضعیت صف امکان‌پذیر نیست.',
+  QUEUE_NUMBER_GENERATED = 'شماره صف با موفقیت تولید شد.',
+  APPOINTMENT_NOT_FOUND = 'نوبت موردنظر پیدا نشد.',
+  APPOINTMENT_ALREADY_QUEUED = 'این نوبت قبلاً وارد صف شده است.',
+  BUSINESS_NOT_FOUND = 'کسب‌وکار موردنظر پیدا نشد.',
+  USER_NOT_FOUND = 'کاربر موردنظر پیدا نشد.',
+}
