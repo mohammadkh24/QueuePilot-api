@@ -7,6 +7,7 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
 import { ServiceModule } from './modules/service/service.module';
+import { AppointmentModule } from './modules/appointment/appointment.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { ServiceModule } from './modules/service/service.module';
     BusinessModule,
 
     ServiceModule,
+
+    AppointmentModule,
   ],
 
   

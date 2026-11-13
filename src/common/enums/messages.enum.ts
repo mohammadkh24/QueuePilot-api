@@ -23,13 +23,22 @@ export enum BusinessMessages {
   BUSINESS_NOT_FOUND = 'کسب‌وکار موردنظر پیدا نشد.',
 }
 
-
-
 export enum ServiceMessages {
-    SERVICE_CREATED = 'خدمت با موفقیت ایجاد شد.',
-    SERVICE_UPDATED = 'اطلاعات خدمت با موفقیت بروزرسانی شد.',
-    SERVICE_DELETED = 'خدمت با موفقیت حذف شد.',
-    SERVICE_NOT_FOUND = 'خدمت موردنظر پیدا نشد.',
-  }
-  
-  
+  SERVICE_CREATED = 'خدمت با موفقیت ایجاد شد.',
+  SERVICE_UPDATED = 'اطلاعات خدمت با موفقیت بروزرسانی شد.',
+  SERVICE_DELETED = 'خدمت با موفقیت حذف شد.',
+  SERVICE_NOT_FOUND = 'خدمت موردنظر پیدا نشد.',
+}
+
+export enum AppointmentMessages {
+  APPOINTMENT_CREATED = 'نوبت با موفقیت ثبت شد.',
+  APPOINTMENT_UPDATED = 'نوبت با موفقیت بروزرسانی شد.',
+  APPOINTMENT_CANCELLED = 'نوبت با موفقیت لغو شد.',
+  APPOINTMENT_COMPLETED = 'نوبت با موفقیت تکمیل شد.',
+  APPOINTMENT_NOT_FOUND = 'نوبت موردنظر پیدا نشد.',
+  APPOINTMENT_CONFLICT = 'این بازه زمانی قبلاً رزرو شده است.',
+  APPOINTMENT_PAST_DATE = 'امکان ثبت نوبت در زمان گذشته وجود ندارد.',
+  SERVICE_NOT_FOUND = 'خدمت موردنظر پیدا نشد.',
+  SERVICE_INACTIVE = 'این خدمت در حال حاضر غیرفعال است.',
+  INVALID_APPOINTMENT_TIME = 'زمان پایان نوبت باید بعد از زمان شروع باشد.',
+}
