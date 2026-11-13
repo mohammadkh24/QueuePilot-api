@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -11,19 +10,15 @@ import { QueueController } from './queue.controller';
 import { QueueService } from './queue.service';
 
 import { AuthModule } from '../auth/auth.module';
+import { QueueGateway } from './gateways/queue.gateway';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Queue,
-      Business,
-      User,
-      Appointment,
-    ]),
+    TypeOrmModule.forFeature([Queue, Business, User, Appointment]),
     AuthModule,
   ],
   controllers: [QueueController],
-  providers: [QueueService],
-  exports: [QueueService],
+  providers: [QueueService, QueueGateway],
+  exports: [QueueService, QueueGateway],
 })
 export class QueueModule {}

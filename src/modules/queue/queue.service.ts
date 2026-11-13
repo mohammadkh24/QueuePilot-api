@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -20,11 +21,18 @@ import { QueueMessages } from '../../common/enums/messages.enum';
 import { QueueStatus } from './enums/queue-status.enum';
 import { AppointmentStatus } from '../appointment/enums/appointment-status.enum';
 
+import {
+  QueueGateway,
+  QueueEventPayload,
+} from './gateways/queue.gateway';
+
 @Injectable()
 export class QueueService {
   constructor(
     @InjectDataSource()
     private readonly dataSource: DataSource,
+
+    private readonly queueGateway: QueueGateway,
   ) {}
 
   // Create Queue Entry
@@ -33,7 +41,7 @@ export class QueueService {
     ownerId: string,
     createQueueDto: CreateQueueDto,
   ) {
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const businessRepository = manager.getRepository(Business);
       const userRepository = manager.getRepository(User);
       const appointmentRepository = manager.getRepository(Appointment);
@@ -53,7 +61,7 @@ export class QueueService {
       }
 
       // Check User
-      let user = await userRepository.findOne({
+      const user = await userRepository.findOne({
         where: { id: createQueueDto.userId },
       });
 
@@ -98,18 +106,24 @@ export class QueueService {
         });
 
         if (!appointment || appointment.business.id !== businessId) {
-          throw new NotFoundException(QueueMessages.APPOINTMENT_NOT_FOUND);
+          throw new NotFoundException(
+            QueueMessages.APPOINTMENT_NOT_FOUND,
+          );
         }
 
         if (appointment.user.id !== user.id) {
-          throw new BadRequestException(QueueMessages.APPOINTMENT_NOT_FOUND);
+          throw new BadRequestException(
+            QueueMessages.APPOINTMENT_NOT_FOUND,
+          );
         }
 
         if (
           appointment.status === AppointmentStatus.CANCELLED ||
           appointment.status === AppointmentStatus.COMPLETED
         ) {
-          throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+          throw new BadRequestException(
+            QueueMessages.QUEUE_INVALID_STATUS,
+          );
         }
 
         const existingQueue = await queueRepository.findOne({
@@ -119,7 +133,9 @@ export class QueueService {
         });
 
         if (existingQueue) {
-          throw new ConflictException(QueueMessages.APPOINTMENT_ALREADY_QUEUED);
+          throw new ConflictException(
+            QueueMessages.APPOINTMENT_ALREADY_QUEUED,
+          );
         }
       }
 
@@ -146,10 +162,18 @@ export class QueueService {
       const savedQueue = await queueRepository.save(queue);
 
       return {
-        message: QueueMessages.QUEUE_CREATED,
-        data: savedQueue,
+        response: {
+          message: QueueMessages.QUEUE_CREATED,
+          data: savedQueue,
+        },
+        eventPayload: this.createEventPayload(savedQueue, businessId),
       };
     });
+
+    // Emit only after successful transaction commit
+    this.queueGateway.emitQueueCreated(result.eventPayload);
+
+    return result.response;
   }
 
   // Update Queue Status
@@ -159,7 +183,7 @@ export class QueueService {
     ownerId: string,
     updateQueueStatusDto: UpdateQueueStatusDto,
   ) {
-    return this.dataSource.transaction(async (manager) => {
+    const result = await this.dataSource.transaction(async (manager) => {
       const businessRepository = manager.getRepository(Business);
       const queueRepository = manager.getRepository(Queue);
 
@@ -191,20 +215,27 @@ export class QueueService {
 
       // Validate Status Transition
       const allowedTransitions: Record<QueueStatus, QueueStatus[]> = {
-        [QueueStatus.WAITING]: [QueueStatus.CALLED, QueueStatus.CANCELLED],
+        [QueueStatus.WAITING]: [
+          QueueStatus.CALLED,
+          QueueStatus.CANCELLED,
+        ],
         [QueueStatus.CALLED]: [
           QueueStatus.SERVING,
           QueueStatus.CANCELLED,
           QueueStatus.NO_SHOW,
         ],
-        [QueueStatus.SERVING]: [QueueStatus.COMPLETED],
+        [QueueStatus.SERVING]: [
+          QueueStatus.COMPLETED,
+        ],
         [QueueStatus.COMPLETED]: [],
         [QueueStatus.CANCELLED]: [],
         [QueueStatus.NO_SHOW]: [],
       };
 
       if (!allowedTransitions[queue.status].includes(newStatus)) {
-        throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+        throw new BadRequestException(
+          QueueMessages.QUEUE_INVALID_STATUS,
+        );
       }
 
       // Update Timestamps
@@ -225,15 +256,32 @@ export class QueueService {
       const updatedQueue = await queueRepository.save(queue);
 
       return {
-        message: QueueMessages.QUEUE_UPDATED,
-        data: updatedQueue,
+        response: {
+          message: QueueMessages.QUEUE_UPDATED,
+          data: updatedQueue,
+        },
+        eventPayload: this.createEventPayload(updatedQueue, businessId),
+        newStatus,
       };
     });
+
+    // Emit after transaction commit
+    if (result.newStatus === QueueStatus.CANCELLED) {
+      this.queueGateway.emitQueueCancelled(result.eventPayload);
+    } else {
+      this.queueGateway.emitQueueUpdated(result.eventPayload);
+    }
+
+    return result.response;
   }
 
   // Cancel Queue Entry
-  async remove(businessId: string, queueId: string, ownerId: string) {
-    return this.dataSource.transaction(async (manager) => {
+  async remove(
+    businessId: string,
+    queueId: string,
+    ownerId: string,
+  ) {
+    const result = await this.dataSource.transaction(async (manager) => {
       const businessRepository = manager.getRepository(Business);
       const queueRepository = manager.getRepository(Queue);
 
@@ -266,16 +314,46 @@ export class QueueService {
         queue.status === QueueStatus.CANCELLED ||
         queue.status === QueueStatus.NO_SHOW
       ) {
-        throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+        throw new BadRequestException(
+          QueueMessages.QUEUE_INVALID_STATUS,
+        );
       }
 
       queue.status = QueueStatus.CANCELLED;
 
-      await queueRepository.save(queue);
+      const cancelledQueue = await queueRepository.save(queue);
 
       return {
-        message: QueueMessages.QUEUE_CANCELLED,
+        response: {
+          message: QueueMessages.QUEUE_CANCELLED,
+        },
+        eventPayload: this.createEventPayload(
+          cancelledQueue,
+          businessId,
+        ),
       };
     });
+
+    // Emit after transaction commit
+    this.queueGateway.emitQueueCancelled(result.eventPayload);
+
+    return result.response;
+  }
+
+  // Create Safe Socket Event Payload
+  private createEventPayload(
+    queue: Queue,
+    businessId: string,
+  ): QueueEventPayload {
+    return {
+      id: queue.id,
+      businessId,
+      queueNumber: queue.queueNumber,
+      status: queue.status,
+      joinedAt: queue.joinedAt,
+      calledAt: queue.calledAt,
+      startedAt: queue.startedAt,
+      completedAt: queue.completedAt,
+    };
   }
 }
