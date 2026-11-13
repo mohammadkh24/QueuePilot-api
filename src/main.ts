@@ -49,6 +49,8 @@ async function bootstrap() {
     .addTag("Businesses")
     .addTag("Services")
     .addTag("Appointments")
+    .addTag('Queue')
+    .addTag('Public')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

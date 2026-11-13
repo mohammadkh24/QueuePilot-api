@@ -2,6 +2,8 @@
 import {
   Controller,
   Post,
+  Get,
+  Query,
   Patch,
   Delete,
   Body,
@@ -23,6 +25,7 @@ import { Request } from 'express';
 
 import { QueueService } from './queue.service';
 import { CreateQueueDto } from './dto/create-queue.dto';
+import { CreateWalkInQueueDto } from './dto/create-walk-in-queue.dto';
 
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { UpdateQueueStatusDto } from './dto/update-queue.dto';
@@ -42,6 +45,36 @@ export class QueueController {
   constructor(
     private readonly queueService: QueueService,
   ) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get queue entries for the business owner' })
+  findAll(
+    @Param('businessId', ParseUUIDPipe) businessId: string,
+    @Req() req: AuthenticatedRequest,
+    @Query('page') page = '1',
+    @Query('limit') limit = '50',
+  ) {
+    return this.queueService.findAll(businessId, req.user.id, Number(page), Number(limit));
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get the authenticated customer active queue entry' })
+  findMine(
+    @Param('businessId', ParseUUIDPipe) businessId: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.queueService.findMine(businessId, req.user.id);
+  }
+
+  @Post('walk-in')
+  @ApiOperation({ summary: 'Add a walk-in customer to the queue without a user account' })
+  createWalkIn(
+    @Param('businessId', ParseUUIDPipe) businessId: string,
+    @Body() dto: CreateWalkInQueueDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.queueService.createWalkIn(businessId, req.user.id, dto);
+  }
 
   // Create Queue Entry
   @Post()

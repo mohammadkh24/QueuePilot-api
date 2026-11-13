@@ -23,6 +23,12 @@ export class Queue {
   @Column({ type: 'int' })
   queueNumber: number;
 
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  customerName: string | null;
+
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  customerPhone: string | null;
+
   @Column({
     type: 'enum',
     enum: QueueStatus,
@@ -50,11 +56,11 @@ export class Queue {
   business: Business;
 
   @ManyToOne(() => User, {
-    nullable: false,
+    nullable: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  user: User;
+  user: User | null;
 
   @OneToOne(() => Appointment, {
     nullable: true,
