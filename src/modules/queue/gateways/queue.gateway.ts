@@ -1,3 +1,4 @@
+
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -46,7 +47,9 @@ export interface QueueEventPayload {
     origin: '*',
   },
 })
-export class QueueGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class QueueGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server: Server;
 
@@ -73,7 +76,9 @@ export class QueueGateway implements OnGatewayConnection, OnGatewayDisconnect {
         throw new Error('Missing token');
       }
 
-      const secret = this.configService.get<string>('jwt.accessTokenSecret');
+      const secret = this.configService.get<string>(
+        'jwt.accessTokenSecret',
+      );
 
       if (!secret) {
         throw new Error('JWT secret is not configured');
@@ -119,14 +124,16 @@ export class QueueGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { businessId } = payload;
 
     // Check whether the user owns this business.
-    const business = await this.dataSource.getRepository(Business).findOne({
-      where: {
-        id: businessId,
-        owner: {
-          id: user.id,
+    const business = await this.dataSource
+      .getRepository(Business)
+      .findOne({
+        where: {
+          id: businessId,
+          owner: {
+            id: user.id,
+          },
         },
-      },
-    });
+      });
 
     // Business owner can join directly.
     if (business) {
@@ -211,5 +218,15 @@ export class QueueGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(`business:${payload.businessId}`)
       .emit('queue:cancelled', payload);
+  }
+
+  // Emit when queue predictions need to be refreshed.
+  emitPredictionUpdated(businessId: string) {
+    this.server
+      .to(`business:${businessId}`)
+      .emit('queue:prediction-updated', {
+        businessId,
+        updatedAt: new Date(),
+      });
   }
 }

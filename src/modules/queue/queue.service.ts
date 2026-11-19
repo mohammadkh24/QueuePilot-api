@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   NotFoundException,
@@ -38,7 +39,12 @@ export class QueueService {
   ) {}
 
   // List queue entries for the business owner.
-  async findAll(businessId: string, ownerId: string, page = 1, limit = 50) {
+  async findAll(
+    businessId: string,
+    ownerId: string,
+    page = 1,
+    limit = 50,
+  ) {
     const currentPage = Math.max(1, page);
     const currentLimit = Math.min(100, Math.max(1, limit));
 
@@ -172,6 +178,7 @@ export class QueueService {
 
     // Emit only after successful transaction commit.
     this.queueGateway.emitQueueCreated(result.eventPayload);
+    this.queueGateway.emitPredictionUpdated(businessId);
 
     return result.response;
   }
@@ -247,18 +254,24 @@ export class QueueService {
         });
 
         if (!appointment || appointment.business.id !== businessId) {
-          throw new NotFoundException(QueueMessages.APPOINTMENT_NOT_FOUND);
+          throw new NotFoundException(
+            QueueMessages.APPOINTMENT_NOT_FOUND,
+          );
         }
 
         if (appointment.user.id !== user.id) {
-          throw new BadRequestException(QueueMessages.APPOINTMENT_NOT_FOUND);
+          throw new BadRequestException(
+            QueueMessages.APPOINTMENT_NOT_FOUND,
+          );
         }
 
         if (
           appointment.status === AppointmentStatus.CANCELLED ||
           appointment.status === AppointmentStatus.COMPLETED
         ) {
-          throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+          throw new BadRequestException(
+            QueueMessages.QUEUE_INVALID_STATUS,
+          );
         }
 
         const existingQueue = await queueRepository.findOne({
@@ -268,7 +281,9 @@ export class QueueService {
         });
 
         if (existingQueue) {
-          throw new ConflictException(QueueMessages.APPOINTMENT_ALREADY_QUEUED);
+          throw new ConflictException(
+            QueueMessages.APPOINTMENT_ALREADY_QUEUED,
+          );
         }
       }
 
@@ -315,6 +330,7 @@ export class QueueService {
 
     // Emit only after successful transaction commit.
     this.queueGateway.emitQueueCreated(result.eventPayload);
+    this.queueGateway.emitPredictionUpdated(businessId);
 
     return result.response;
   }
@@ -360,7 +376,10 @@ export class QueueService {
 
       // Validate status transition.
       const allowedTransitions: Record<QueueStatus, QueueStatus[]> = {
-        [QueueStatus.WAITING]: [QueueStatus.CALLED, QueueStatus.CANCELLED],
+        [QueueStatus.WAITING]: [
+          QueueStatus.CALLED,
+          QueueStatus.CANCELLED,
+        ],
         [QueueStatus.CALLED]: [
           QueueStatus.SERVING,
           QueueStatus.CANCELLED,
@@ -373,7 +392,9 @@ export class QueueService {
       };
 
       if (!allowedTransitions[previousStatus].includes(newStatus)) {
-        throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+        throw new BadRequestException(
+          QueueMessages.QUEUE_INVALID_STATUS,
+        );
       }
 
       // Update timestamps.
@@ -420,11 +441,17 @@ export class QueueService {
       this.queueGateway.emitQueueUpdated(result.eventPayload);
     }
 
+    this.queueGateway.emitPredictionUpdated(businessId);
+
     return result.response;
   }
 
   // Cancel Queue Entry.
-  async remove(businessId: string, queueId: string, ownerId: string) {
+  async remove(
+    businessId: string,
+    queueId: string,
+    ownerId: string,
+  ) {
     const result = await this.dataSource.transaction(async (manager) => {
       const businessRepository = manager.getRepository(Business);
       const queueRepository = manager.getRepository(Queue);
@@ -458,7 +485,9 @@ export class QueueService {
         queue.status === QueueStatus.CANCELLED ||
         queue.status === QueueStatus.NO_SHOW
       ) {
-        throw new BadRequestException(QueueMessages.QUEUE_INVALID_STATUS);
+        throw new BadRequestException(
+          QueueMessages.QUEUE_INVALID_STATUS,
+        );
       }
 
       const previousStatus = queue.status;
@@ -481,12 +510,16 @@ export class QueueService {
         response: {
           message: QueueMessages.QUEUE_CANCELLED,
         },
-        eventPayload: this.createEventPayload(cancelledQueue, businessId),
+        eventPayload: this.createEventPayload(
+          cancelledQueue,
+          businessId,
+        ),
       };
     });
 
     // Emit after successful transaction commit.
     this.queueGateway.emitQueueCancelled(result.eventPayload);
+    this.queueGateway.emitPredictionUpdated(businessId);
 
     return result.response;
   }
