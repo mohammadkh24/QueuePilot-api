@@ -10,6 +10,7 @@ import { ServiceModule } from './modules/service/service.module';
 import { AppointmentModule } from './modules/appointment/appointment.module';
 import { QueueModule } from './modules/queue/queue.module';
 import { PublicModule } from './modules/public/public.module';
+import { QueueHistoryModule } from './modules/queue-history/queue-history.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { PublicModule } from './modules/public/public.module';
 
     QueueModule,
     PublicModule,
+    QueueHistoryModule,
   ],
 
   
