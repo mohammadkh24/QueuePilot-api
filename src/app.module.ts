@@ -12,6 +12,7 @@ import { QueueModule } from './modules/queue/queue.module';
 import { PublicModule } from './modules/public/public.module';
 import { QueueHistoryModule } from './modules/queue-history/queue-history.module';
 import { PredictionModule } from './modules/prediction/prediction.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { PredictionModule } from './modules/prediction/prediction.module';
     PublicModule,
     QueueHistoryModule,
     PredictionModule,
+    AnalyticsModule,
   ],
 
   
