@@ -22,7 +22,10 @@ import { QueueMessages } from '../../common/enums/messages.enum';
 import { QueueStatus } from './enums/queue-status.enum';
 import { AppointmentStatus } from '../appointment/enums/appointment-status.enum';
 
-import { QueueGateway, QueueEventPayload } from './gateways/queue.gateway';
+import {
+  QueueGateway,
+  QueueEventPayload,
+} from './gateways/queue.gateway';
 
 import { QueueHistoryService } from '../queue-history/queue-history.service';
 import { QueueEvent } from '../queue-history/enums/queue-event.enum';
@@ -208,10 +211,14 @@ export class QueueService {
         throw new NotFoundException(QueueMessages.BUSINESS_NOT_FOUND);
       }
 
-      // Check user.
-      const user = await userRepository.findOne({
-        where: { id: createQueueDto.userId },
-      });
+      // Find user and load their name.
+      const user = await userRepository
+        .createQueryBuilder('user')
+        .addSelect(['user.firstName', 'user.lastName'])
+        .where('user.id = :userId', {
+          userId: createQueueDto.userId,
+        })
+        .getOne();
 
       if (!user) {
         throw new NotFoundException(QueueMessages.USER_NOT_FOUND);
@@ -297,9 +304,17 @@ export class QueueService {
 
       const queueNumber = (lastQueue?.queueNumber ?? 0) + 1;
 
+      // Build customer name from the registered user.
+      const customerName =
+        [user.firstName, user.lastName]
+          .filter(Boolean)
+          .join(' ')
+          .trim() || null;
+
       // Create queue entry.
       const queue = queueRepository.create({
         queueNumber,
+        customerName,
         status: QueueStatus.WAITING,
         joinedAt: new Date(),
         business,
@@ -533,6 +548,7 @@ export class QueueService {
       id: queue.id,
       businessId,
       queueNumber: queue.queueNumber,
+      customerName: queue.customerName ?? null,
       status: queue.status,
       joinedAt: queue.joinedAt,
       calledAt: queue.calledAt,

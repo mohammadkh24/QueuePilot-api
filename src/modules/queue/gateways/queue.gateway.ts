@@ -34,6 +34,7 @@ export interface QueueEventPayload {
   id: string;
   businessId: string;
   queueNumber: number;
+  customerName: string | null;
   status: QueueStatus;
   joinedAt: Date;
   calledAt: Date | null;
@@ -59,10 +60,9 @@ export class QueueGateway
     private readonly dataSource: DataSource,
   ) {}
 
-  async handleConnection(client: Socket) {
+  async handleConnection(client: Socket): Promise<void> {
     try {
       const authToken = client.handshake.auth?.token;
-
       const authorization = client.handshake.headers.authorization;
 
       const headerToken =
@@ -102,7 +102,7 @@ export class QueueGateway
     }
   }
 
-  handleDisconnect(client: Socket) {
+  handleDisconnect(client: Socket): void {
     // Socket.IO automatically removes disconnected clients from rooms.
   }
 
@@ -200,28 +200,28 @@ export class QueueGateway
   }
 
   // Emit when a new customer joins the queue.
-  emitQueueCreated(payload: QueueEventPayload) {
+  emitQueueCreated(payload: QueueEventPayload): void {
     this.server
       .to(`business:${payload.businessId}`)
       .emit('queue:created', payload);
   }
 
   // Emit when a queue entry status changes.
-  emitQueueUpdated(payload: QueueEventPayload) {
+  emitQueueUpdated(payload: QueueEventPayload): void {
     this.server
       .to(`business:${payload.businessId}`)
       .emit('queue:updated', payload);
   }
 
   // Emit when a queue entry is cancelled.
-  emitQueueCancelled(payload: QueueEventPayload) {
+  emitQueueCancelled(payload: QueueEventPayload): void {
     this.server
       .to(`business:${payload.businessId}`)
       .emit('queue:cancelled', payload);
   }
 
   // Emit when queue predictions need to be refreshed.
-  emitPredictionUpdated(businessId: string) {
+  emitPredictionUpdated(businessId: string): void {
     this.server
       .to(`business:${businessId}`)
       .emit('queue:prediction-updated', {
